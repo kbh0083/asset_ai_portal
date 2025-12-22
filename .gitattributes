@@ -1,0 +1,44 @@
+# Windows/Mac/Linux 크로스 플랫폼 지원
+# Line ending 자동 변환
+
+# 기본값: 자동 변환
+* text=auto
+
+# Python 파일
+*.py text eol=lf
+
+# Shell 스크립트 (Unix 형식 유지)
+*.sh text eol=lf
+
+# Windows 배치 파일
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# 설정 파일
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.ini text eol=lf
+*.cfg text eol=lf
+
+# Markdown/문서
+*.md text eol=lf
+*.txt text eol=lf
+
+# Docker
+Dockerfile text eol=lf
+*.dockerfile text eol=lf
+docker-compose*.yml text eol=lf
+
+# 바이너리 파일 (변환 금지)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+
