@@ -1,6 +1,6 @@
-# Samsung AI Portal
+#  AI Portal
 
-삼성자산운용 AI 서비스 플랫폼 백엔드
+자산운용 AI 서비스 플랫폼 백엔드
 
 ## 개요
 
@@ -42,7 +42,7 @@
 ## 📁 프로젝트 구조
 
 ```
-samsung_ai_portal/
+_ai_portal/
 ├── pyproject.toml          # 의존성 및 프로젝트 설정
 ├── alembic/                # DB 마이그레이션
 │   ├── env.py
@@ -279,5 +279,12 @@ self._session.add(entity)
 await self._session.commit()
 await self._session.refresh(entity)
 ```
+
+ssh -L 3900:localhost:3950 minisoft@1.241.20.229 -p 2194
+
+SSH 접속 정보
+IP: 192.168.1.194
+ID : minisoft
+PW: Mini1234!
 
 ---
