@@ -6,9 +6,13 @@ PDF 및 Excel 파일에서 텍스트를 추출하는 함수들을 제공합니�
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional, Tuple, TypedDict
 
 from langchain.messages import AIMessage
+import pandas as pd
+import xlrd
+from openpyxl import load_workbook
+import pdfplumber
 
 # docling imports
 try:
@@ -166,13 +170,6 @@ def extract_pdf_with_pdfplumber(pdf_path: str, password: Optional[str] = None) -
         ValueError: PDF 암호가 올바르지 않을 때
         Exception: 기타 PDF 처리 오류
     """
-    try:
-        import pdfplumber
-    except ImportError as exc:
-        raise ImportError(
-            "PDF를 처리하기 위해 pdfplumber가 필요합니다.\n"
-            "설치 명령: pip install pdfplumber"
-        ) from exc
     
     markdown_parts = []
     
@@ -391,8 +388,6 @@ def extract_text_from_excel(excel_path: str) -> Dict[str, str]:
     # 여러 Excel 라이브러리 시도 (우선순위 순)
     # 1. pandas + openpyxl/xlrd (가장 편리함)
     try:
-        import pandas as pd
-        
         # 모든 시트 읽기
         if file_ext == '.xlsx':
             excel_file = pd.ExcelFile(str(excel_path), engine='openpyxl')
@@ -432,8 +427,6 @@ def extract_text_from_excel(excel_path: str) -> Dict[str, str]:
     # 2. openpyxl (xlsx 파일용)
     if file_ext == '.xlsx':
         try:
-            from openpyxl import load_workbook
-            
             workbook = load_workbook(str(excel_path), data_only=True)
             sheets_text = {}
             
@@ -454,9 +447,7 @@ def extract_text_from_excel(excel_path: str) -> Dict[str, str]:
     
     # 3. xlrd (xls 파일용)
     if file_ext == '.xls':
-        try:
-            import xlrd
-            
+        try:            
             workbook = xlrd.open_workbook(str(excel_path))
             sheets_text = {}
             
@@ -506,3 +497,34 @@ def parser_excel(excel_path: str) -> str:
         result_parts.append("")  # 빈 줄 추가
     
     return '\n'.join(result_parts)
+
+
+
+def df_to_markdown(df: pd.DataFrame, max_rows: int = 2000) -> str:
+    if df is None:
+        return ""
+    df = df.fillna("")
+    if len(df) > max_rows:
+        df = df.head(max_rows)
+    return df.to_markdown(index=False)
+
+
+def extract_excel_to_markdown(xls_path: str, max_rows_per_sheet: int = 2000) -> Tuple[str, List[str]]:
+    issues: List[str] = []
+    chunks: List[str] = []
+    try:
+        xls = pd.ExcelFile(xls_path)
+    except Exception as e:
+        return "", [f"EXCEL_OPEN_FAIL:{type(e).__name__}:{e}"]
+
+    for sheet in xls.sheet_names:
+        try:
+            # dtype=str 제거: 숫자/날짜 형식 깨짐 완화
+            df = pd.read_excel(xls_path, sheet_name=sheet)
+            md = df_to_markdown(df, max_rows=max_rows_per_sheet)
+            chunks.append(f"\n\n# SHEET {sheet}\n{md}\n")
+        except Exception as e:
+            issues.append(f"SHEET_READ_FAIL:{sheet}:{type(e).__name__}:{e}")
+            continue
+
+    return "\n".join(chunks), issues
