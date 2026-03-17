@@ -183,3 +183,91 @@ def extract_validate_result(report_validate_markdown: str) -> str:
     if match:
         return match.group(1).upper()
     return None
+
+
+def visualize_res_result(res: Dict[str, Any]):
+    """
+    extract_one_file의 결과값 res를 테이블 형태로 시각화하는 함수
+    
+    Args:
+        res: extract_one_file 함수의 반환값 (file, db_rows, ingest_issues, extract_issues, validation_report 포함)
+    """
+    if not res:
+        print("res 변수가 비어있습니다.")
+        return
+    
+    # 파일 정보 표시
+    print("=" * 80)
+    print(f"📄 파일: {res.get('file', 'N/A')}")
+    print("=" * 80)
+    print()
+    
+    # db_rows 테이블 생성
+    if res.get('db_rows'):
+        db_rows_data = []
+        for idx, row in enumerate(res['db_rows'], 1):
+            row_data = {'Row #': idx}
+            # 각 행의 모든 키-값을 추가
+            for key, value in row.items():
+                # date와 Decimal 타입을 문자열로 변환
+                if isinstance(value, date):
+                    row_data[key] = value.isoformat()
+                elif isinstance(value, Decimal):
+                    row_data[key] = str(value)
+                else:
+                    row_data[key] = value
+            db_rows_data.append(row_data)
+        
+        if db_rows_data:
+            df_db_rows = pd.DataFrame(db_rows_data)
+            print("=" * 80)
+            print("📊 DB 행 데이터")
+            print("=" * 80)
+            # 모든 행과 열을 표시하도록 pandas 옵션 설정
+            with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None, 'display.max_colwidth', None):
+                display(df_db_rows)
+            print()
+    else:
+        print("=" * 80)
+        print("📊 DB 행 데이터: 없음")
+        print("=" * 80)
+        print()
+    
+    # ingest_issues 표시
+    if res.get('ingest_issues'):
+        print("=" * 80)
+        print("⚠️  Ingest 이슈")
+        print("=" * 80)
+        for idx, issue in enumerate(res['ingest_issues'], 1):
+            print(f"{idx}. {issue}")
+        print()
+    else:
+        print("=" * 80)
+        print("✅ Ingest 이슈 없음")
+        print("=" * 80)
+        print()
+    
+    # extract_issues 표시
+    if res.get('extract_issues'):
+        print("=" * 80)
+        print("⚠️  Extract 이슈")
+        print("=" * 80)
+        for idx, issue in enumerate(res['extract_issues'], 1):
+            print(f"{idx}. {issue}")
+        print()
+    else:
+        print("=" * 80)
+        print("✅ Extract 이슈 없음")
+        print("=" * 80)
+        print()
+    
+    # validation_report 표시
+    validation_report = res.get('validation_report', '')
+    print("=" * 80)
+    print("🔍 검증 리포트")
+    print("=" * 80)
+    if validation_report:
+        print(validation_report)
+    else:
+        print("검증 리포트 없음")
+    print()
